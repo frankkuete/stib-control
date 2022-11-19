@@ -1,0 +1,37 @@
+{% extends 'stibapp/base.html' %}{% block content %}
+<h1>Bienvenue sur notre application</h1>
+<p>Cet application web qui permet de signaler les contrôles sur le réseau de la STIB.</p>
+        <h2>Creer un Nouveau compte</h2>
+        <a href="{% url 'signin'  %}">Creer un nouveau compte</a>
+
+       <form  action="{% url 'home'%}" method="POST">
+           <fieldset>
+               <legend>Connecter vous a l'application comme utilisateur</legend>
+               {% csrf_token %}
+               {% if user_values %}
+                <p style="color:red;">{{ user_values.error }}</p>
+               {% endif %}
+           <p> Votre pseudo <input type="text" name="pseudo" required></input></p>
+           <p> Votre mot de passe <input type="password" name="password" required></input></p>
+           <input type="submit" value="Connectez vous ! " />
+            <input type="reset" value="Reinitialiser" />
+           </fieldset>
+       </form>
+
+       <form  action="{% url 'home' %}" method="POST">
+           <fieldset><legend>Connecter vous a l'application comme administrateur</legend>
+               {% csrf_token %}
+               {% if admin_values %}
+                <p style="color:red;">{{ admin_values.error }}</p>
+                {% endif %}
+               <p> Votre pseudo <input type="text" name="adminpseudo" required></input></p>
+               <p> Votre code <input type="password" name="code" required></input></p>
+               <input type="submit" value="Connectez vous ! " />
+               <input type="reset" value="Reinitialiser" />
+           </fieldset>
+
+       </form>
+
+
+{% endblock %}
+

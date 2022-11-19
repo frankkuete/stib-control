@@ -1,0 +1,138 @@
+from django.http import Http404, HttpResponse
+from django.shortcuts import redirect, render
+
+from stibapp.forms import UserForm, AdminForm, StationForm, LineForm, StationOrderForm, ControlForm
+from stibapp.models import User, Admin, Station, Line, StationOrder , Control
+
+
+# Create your views here.
+
+
+def signin(request):
+    if request.method == 'POST':
+        form = UserForm(request.POST)
+        if form.is_valid():
+            if len(User.objects.filter(pseudo=form.cleaned_data["pseudo"])) == 1:
+                error = {'error': 'le pseudo est déja pris'}
+                return render(request, 'stibapp/user_create.html', {'user_values': error, 'form': form})
+            user = form.save()
+            if user.isadmin:
+                return redirect('create-admin', user.id)
+            else:
+                return redirect('home')
+    else:
+        form = UserForm()
+        return render(request, 'stibapp/user_create.html', {'form': form})
+
+
+def createadmin(request, id):
+    if request.method == 'POST':
+        form = AdminForm(request.POST)
+        if form.is_valid():
+            userid = id
+            user = User.objects.get(id=userid)
+            admin = Admin(pseudo=user, code=form.data['code'])
+            form.pseudo = user
+            admin.save()
+            return redirect('home')
+    else:
+        form = AdminForm()
+        return render(request, 'stibapp/create-admin.html', {'form': form})
+
+
+def home(request):
+    if request.method == 'POST':
+        if request.POST.get('code'):
+            pseudo = request.POST.get('adminpseudo')
+            code = request.POST.get('code')
+            user = User.objects.filter(pseudo=pseudo)
+            if len(user) == 1:
+                if len(Admin.objects.filter(pseudo=user[0]).filter(code=code)) == 1:
+                    return redirect('dashboard')
+                else:
+                    error = {'error': "les informations de connexion sont incorrectes "}
+                    return render(request, 'stibapp/home.html', {'admin_values': error})
+            else:
+                error = {'error': "les informations de connexion sont incorrectes"}
+                return render(request, 'stibapp/home.html', {'admin_values': error})
+        else:
+            pseudo = request.POST.get('pseudo')
+            password = request.POST.get('password')
+            if len(User.objects.filter(pseudo=pseudo).filter(password=password)) == 1:
+                return redirect('app')
+            else:
+                error = {'error': 'les informations de connexion sont incorrectes'}
+                return render(request, 'stibapp/home.html', {'user_values': error})
+    else:
+        return render(request, 'stibapp/home.html')
+
+
+def dashboard(request):
+    sform = StationForm(request.POST)
+    lform = LineForm(request.POST)
+    oform = StationOrderForm(request.POST)
+    blankforms = {'sform': StationForm(), 'lform': LineForm(), 'oform': StationOrderForm()}
+    blankforms['lines'] = Line.objects.all()
+    blankforms['stations'] = Station.objects.all()
+    blankforms['stationorders'] = StationOrder.objects.order_by('line').all()
+    if request.method == 'POST':
+        if request.POST.get('station_name'):
+            if len(Station.objects.filter(station_name=request.POST.get('station_name'))) == 1:
+                blankforms['station_error_message'] = 'la station que vous essayé de creer existe déja'
+                return render(request, 'stibapp/dashboard.html', blankforms)
+            else:
+                sform.save()
+                blankforms['station_created'] = 'Station crée avec succès'
+                return render(request, 'stibapp/dashboard.html', blankforms)
+        elif request.POST.get('direction'):
+            direction = request.POST.get('direction')
+            number = request.POST.get('number')
+            if len(Line.objects.filter(direction=direction).filter(number=number)) == 1:
+                blankforms['line_error_message'] = 'la ligne que vous essayé de creer existe déja'
+                return render(request, 'stibapp/dashboard.html', blankforms)
+            else:
+                lform.save()
+                blankforms['line_created'] = 'ligne crée avec succès'
+                return render(request, 'stibapp/dashboard.html', blankforms)
+        else:
+            line = Line.objects.filter(pk=request.POST.get('line'))
+            station = Station.objects.filter(pk=request.POST.get('station'))
+            stationorder = StationOrder.objects.filter(line=line[0]).filter(station=station[0])
+            if len(stationorder) == 1:
+                blankforms['stationorder_error_message'] = "la station que vous voulez enregistrer existe déja ," \
+                                                           "l'ordre sera simplement modifiée "
+                StationOrderForm(request.POST, instance=stationorder[0]).save()
+                return render(request, 'stibapp/dashboard.html', blankforms)
+            else:
+                oform.save()
+                blankforms['station_order_created'] = 'Ordre de station ajouté'
+                return render(request, 'stibapp/dashboard.html', blankforms)
+    else:
+        return render(request, 'stibapp/dashboard.html', blankforms)
+
+
+def deletestation(request, id):
+    station = Station.objects.get(pk=id)
+    station.delete()
+    return redirect('dashboard')
+
+
+def deleteline(request, id):
+    line = Line.objects.get(pk=id)
+    line.delete()
+    return redirect('dashboard')
+
+def deletecontrol(request, id):
+    control = Control.objects.get(pk=id)
+    control.delete()
+    return redirect('app')
+
+def app(request):
+    controls = Control.objects.all()
+    cform = ControlForm()
+    params = {'controls': controls , 'cform': cform}
+    if request.method == 'POST':
+        ControlForm(request.POST).save()
+        return render(request, 'stibapp/application.html', params)
+    else:
+        return render(request, 'stibapp/application.html', params)

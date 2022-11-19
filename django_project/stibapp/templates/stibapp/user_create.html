@@ -1,0 +1,15 @@
+{% extends 'stibapp/base.html' %} {% block content %}
+
+<h1>Enregistrer votre pour acceder a l'application</h1>
+<a href="{% url 'home' %}">Retour a la page de connexion</a>
+
+{% if user_values %}
+          <p style="color:red;">{{ user_values.error }}</p>
+{% endif %}
+<form action="" method="post">
+  {% csrf_token %} {{ form.as_p }}
+  <input type="submit" value="Envoyer" />
+  <input type="reset" value="Reinitialiser" />
+</form>
+
+{% endblock %}

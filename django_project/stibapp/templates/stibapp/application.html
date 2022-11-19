@@ -1,0 +1,40 @@
+{% extends 'stibapp/base.html' %} {% block content %}
+
+<h1>Bienvenue sur l'application STIB-CONTROL </h1>
+
+<a href="{% url 'home' %}">Deconnection</a>
+
+<table>
+    <thead>
+        <tr>
+            <th colspan="3">Listes des controles signalés</th>
+        </tr>
+        <tr>
+            <th>Nom de la station </th>
+            <th colspan="2">Nom de (ou des lignes concernées) la ligne concernés </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for control in controls %}
+        <tr>
+            <td>{{control.station}}</td>
+            <td>{{control}}</td>
+            <td>
+              <form action="{% url 'delete-control' control.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Supprimer Le controle signalé" />
+              </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<form  action="" method="POST">
+   <fieldset>
+       <legend>Signalez un nouveau sur un arret de tram , metro ou bus</legend>
+       {% csrf_token %} {{ cform.as_p }}
+       <input type="submit" value="Signalez un controle ! " />
+       <input type="reset" value="Reinitialiser" />
+   </fieldset>
+</form>
+{% endblock %}

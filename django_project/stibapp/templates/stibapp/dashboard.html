@@ -1,0 +1,130 @@
+{% extends 'stibapp/base.html' %} {% block content %}
+
+<h1>Bienvenue sur la plateforme Administrateur STIB-CONTROL</h1>
+<a href="{% url 'home' %}">Deconnection</a>
+
+<table>
+    <thead>
+        <tr>
+            <th colspan="3">Stations</th>
+        </tr>
+        <tr>
+            <th>Nom de la station </th>
+            <th>Nom de la commune </th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for station in stations %}
+        <tr>
+            <td>{{station.station_name}}</td>
+            <td>{{station.locality}}</td>
+            <td>
+              <form action="{% url 'delete-station' station.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Supprimer" />
+              </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<table>
+    <thead>
+        <tr>
+            <th colspan="4">Lignes</th>
+        </tr>
+        <tr>
+            <th>Numero de la ligne </th>
+            <th> Direction </th>
+            <th>Type de ligne </th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for line in lines %}
+        <tr>
+            <td>{{line.number}}</td>
+            <td>{{line.direction}}</td>
+            <td>{{line.category}}</td>
+            <td>
+              <form action="{% url 'delete-line' line.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Supprimer" />
+              </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<table>
+    <thead>
+        <tr>
+            <th colspan="3">Details des Lignes</th>
+        </tr>
+        <tr>
+            <th>Ligne</th>
+            <th>Station</th>
+            <th>Ordre</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stationorder in stationorders %}
+        <tr>
+            <td >{{stationorder.line}}</td>
+            <td>{{stationorder.station}}</td>
+            <td>{{stationorder.order}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% if station_error_message %}
+  <p style="color:red;">{{ station_error_message }}</p>
+{% endif %}
+{% if station_created %}
+  <p style="color:green;">{{ station_created }}</p>
+{% endif %}
+
+<form action="" method="post">
+  <fieldset>
+    <legend> Encoder  une nouvelle station </legend>
+     {% csrf_token %} {{ sform.as_p }}
+  <input type="submit" value="Creer station" />
+  <input type="reset" value="Reinitialiser" />
+  </fieldset>
+</form>
+
+{% if line_created %}
+  <p style="color:green;">{{ line_created }}</p>
+{% endif %}
+{% if line_error_message %}
+  <p style="color:red;">{{ line_error_message }}</p>
+{% endif %}
+<form action="" method="post">
+  <fieldset>
+  <legend> Encoder  une nouvelle Ligne </legend>
+  {% csrf_token %} {{ lform.as_p }}
+  <input type="submit" value="Creer une ligne" />
+  <input type="reset" value="Reinitialiser" />
+    </fieldset>
+</form>
+
+{% if stationorder_error_message %}
+  <p style="color:red;">{{ stationorder_error_message }}</p>
+{% endif %}
+{% if station_order_created %}
+  <p style="color:green;">{{ station_order_created }}</p>
+{% endif %}
+
+<form action="" method="post">
+  <fieldset>
+    <legend> Encoder l'ordre d'une station dans une ligne </legend>
+  {% csrf_token %} {{ oform.as_p }}
+  <input type="submit" value="Associer une station a une ligne" />
+  <input type="reset" value="Reinitialiser" />
+    </fieldset>
+</form>
+
+{% endblock %}
