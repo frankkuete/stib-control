@@ -2,7 +2,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 
 from stibapp.forms import UserForm, AdminForm, StationForm, LineForm, StationOrderForm, ControlForm
-from stibapp.models import User, Admin, Station, Line, StationOrder , Control
+from stibapp.models import User, Admin, Station, Line, StationOrder, Control
 
 
 # Create your views here.
@@ -10,34 +10,36 @@ from stibapp.models import User, Admin, Station, Line, StationOrder , Control
 
 def signin(request):
     if request.method == 'POST':
-        form = UserForm(request.POST)
-        if form.is_valid():
-            if len(User.objects.filter(pseudo=form.cleaned_data["pseudo"])) == 1:
+        pseudo = request.POST.get('pseudo')
+        userpassword = request.POST.get('userpassword')
+        if request.POST.get('isadmin') == 'True':
+            isadmin = True
+        else:
+            isadmin = False
+        code = request.POST.get('code')
+        if pseudo and userpassword:
+            if len(User.objects.filter(pseudo=pseudo)) >= 1:
                 error = {'error': 'le pseudo est déja pris'}
-                return render(request, 'stibapp/user_create.html', {'user_values': error, 'form': form})
-            user = form.save()
-            if user.isadmin:
-                return redirect('create-admin', user.id)
+                return render(request, 'stibapp/user_create.html', {'user_values': error})
+            if isadmin:
+                if code:
+                    user = User.objects.create(
+                        pseudo=pseudo, password=userpassword, isadmin=isadmin)
+                    user.save()
+                    admin = Admin.objects.create(pseudo=user, code=code)
+                    admin.save()
+                    return redirect('home')
+                else:
+                    error = {
+                        'error': 'Pour etre Adminstrateur vous devez entrer un passcode'}
+                    return render(request, 'stibapp/user_create.html', {'user_values': error})
             else:
+                user = User.objects.create(
+                    pseudo=pseudo, password=userpassword, isadmin=isadmin)
+                user.save()
                 return redirect('home')
     else:
-        form = UserForm()
-        return render(request, 'stibapp/user_create.html', {'form': form})
-
-
-def createadmin(request, id):
-    if request.method == 'POST':
-        form = AdminForm(request.POST)
-        if form.is_valid():
-            userid = id
-            user = User.objects.get(id=userid)
-            admin = Admin(pseudo=user, code=form.data['code'])
-            form.pseudo = user
-            admin.save()
-            return redirect('home')
-    else:
-        form = AdminForm()
-        return render(request, 'stibapp/create-admin.html', {'form': form})
+        return render(request, 'stibapp/user_create.html')
 
 
 def home(request):
@@ -48,9 +50,11 @@ def home(request):
             user = User.objects.filter(pseudo=pseudo)
             if len(user) == 1:
                 if len(Admin.objects.filter(pseudo=user[0]).filter(code=code)) == 1:
+                    request.session["pseudo"] = pseudo
                     return redirect('dashboard')
                 else:
-                    error = {'error': "les informations de connexion sont incorrectes "}
+                    error = {
+                        'error': "les informations de connexion sont incorrectes "}
                     return render(request, 'stibapp/home.html', {'admin_values': error})
             else:
                 error = {'error': "les informations de connexion sont incorrectes"}
@@ -59,6 +63,7 @@ def home(request):
             pseudo = request.POST.get('pseudo')
             password = request.POST.get('password')
             if len(User.objects.filter(pseudo=pseudo).filter(password=password)) == 1:
+                request.session["pseudo"] = pseudo
                 return redirect('app')
             else:
                 error = {'error': 'les informations de connexion sont incorrectes'}
@@ -71,10 +76,13 @@ def dashboard(request):
     sform = StationForm(request.POST)
     lform = LineForm(request.POST)
     oform = StationOrderForm(request.POST)
-    blankforms = {'sform': StationForm(), 'lform': LineForm(), 'oform': StationOrderForm()}
+    blankforms = {'sform': StationForm(), 'lform': LineForm(),
+                  'oform': StationOrderForm()}
     blankforms['lines'] = Line.objects.all()
     blankforms['stations'] = Station.objects.all()
-    blankforms['stationorders'] = StationOrder.objects.order_by('line').all()
+    blankforms['stationorders'] = StationOrder.objects.order_by(
+        'line', 'order').all()
+    blankforms['pseudo'] = request.session['pseudo']
     if request.method == 'POST':
         if request.POST.get('station_name'):
             if len(Station.objects.filter(station_name=request.POST.get('station_name'))) == 1:
@@ -97,10 +105,10 @@ def dashboard(request):
         else:
             line = Line.objects.filter(pk=request.POST.get('line'))
             station = Station.objects.filter(pk=request.POST.get('station'))
-            stationorder = StationOrder.objects.filter(line=line[0]).filter(station=station[0])
+            stationorder = StationOrder.objects.filter(
+                line=line[0]).filter(station=station[0])
             if len(stationorder) == 1:
-                blankforms['stationorder_error_message'] = "la station que vous voulez enregistrer existe déja ," \
-                                                           "l'ordre sera simplement modifiée "
+                blankforms['stationorder_error_message'] = "la station que vous voulez enregistrer existe déja l'ordre sera simplement modifiée "
                 StationOrderForm(request.POST, instance=stationorder[0]).save()
                 return render(request, 'stibapp/dashboard.html', blankforms)
             else:
@@ -122,15 +130,18 @@ def deleteline(request, id):
     line.delete()
     return redirect('dashboard')
 
+
 def deletecontrol(request, id):
     control = Control.objects.get(pk=id)
     control.delete()
     return redirect('app')
 
+
 def app(request):
     controls = Control.objects.all()
     cform = ControlForm()
-    params = {'controls': controls , 'cform': cform}
+    params = {'controls': controls, 'cform': cform,
+              'pseudo': request.session['pseudo']}
     if request.method == 'POST':
         ControlForm(request.POST).save()
         return render(request, 'stibapp/application.html', params)

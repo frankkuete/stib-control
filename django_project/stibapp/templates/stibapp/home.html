@@ -1,37 +1,81 @@
-{% extends 'stibapp/base.html' %}{% block content %}
-<h1>Bienvenue sur notre application</h1>
-<p>Cet application web qui permet de signaler les contrôles sur le réseau de la STIB.</p>
-        <h2>Creer un Nouveau compte</h2>
-        <a href="{% url 'signin'  %}">Creer un nouveau compte</a>
+{% extends 'stibapp/base.html' %}{% block content %} {% load static %}
 
-       <form  action="{% url 'home'%}" method="POST">
-           <fieldset>
-               <legend>Connecter vous a l'application comme utilisateur</legend>
-               {% csrf_token %}
-               {% if user_values %}
-                <p style="color:red;">{{ user_values.error }}</p>
-               {% endif %}
-           <p> Votre pseudo <input type="text" name="pseudo" required></input></p>
-           <p> Votre mot de passe <input type="password" name="password" required></input></p>
-           <input type="submit" value="Connectez vous ! " />
-            <input type="reset" value="Reinitialiser" />
-           </fieldset>
-       </form>
+<div class="px-4 py-5 my-5 text-center">
+  <img class="d-block mx-auto mb-4" src="{% static 'stibapp/assets/brand/stib-logo.png' %}" alt="" width="152" height="57"/>
+  <h1 class="display-5 fw-bold">Bienvenue sur STIB-CONTROL</h1>
+  <div class="col-lg-6 mx-auto">
+    <p class="lead mb-4">Cet application web qui permet de signaler les contrôles sur le réseau de la STIB.</p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a href="{% url 'signin'  %}"
+        ><button type="button" class="btn btn-primary btn-lg px-4 gap-3">Créer un nouveau compte</button></a>
+      <!--<button type="button" class="btn btn-outline-secondary btn-lg px-4">Secondary</button>-->
+    </div>
+  </div>
+</div>
 
-       <form  action="{% url 'home' %}" method="POST">
-           <fieldset><legend>Connecter vous a l'application comme administrateur</legend>
-               {% csrf_token %}
-               {% if admin_values %}
-                <p style="color:red;">{{ admin_values.error }}</p>
-                {% endif %}
-               <p> Votre pseudo <input type="text" name="adminpseudo" required></input></p>
-               <p> Votre code <input type="password" name="code" required></input></p>
-               <input type="submit" value="Connectez vous ! " />
-               <input type="reset" value="Reinitialiser" />
-           </fieldset>
+<div class="row mb-5">
+  <div class="col">
+    <div class="card">
+      <div class="card-header">
+        <h3>Connecter vous a l'application comme utilisateur</h3>
+      </div>
+      <div class="card-body">
+        <form action="{% url 'home'%}" method="POST">
+          {% csrf_token %} 
+          {% if user_values %}
+          <div class="alert alert-danger alert-dismissible fade show"role="alert" >
+            {{ user_values.error }}
+            <button type="button"  class="btn-close" data-bs-dismiss="alert"  aria-label="Close" ></button>
+          </div>
+          {% endif %}
+          <div class="mb-3">
+            <label for="pseudoInput" class="form-label">Votre pseudo</label>
+            <input type="text"   name="pseudo"   class="form-control"  id="pseudoInput" aria-describedby="pseudoHelp"  required  />
+            <div id="pseudoHelp" class="form-text"> il n'est pas possible d'ajouter une pseudo déja existant.</div>
+          </div>
+          <div class="mb-3">
+            <label for="inputPassword" class="form-label">Votre mot de passe</label >
+            <input class="form-control" id="inputPassword" type="password" name="password" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Connectez vous !</button>
+          <button type="reset" class="btn btn-primary">Reinitialiser</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <div class="card-header">
+        <h3>Connecter vous a l'application comme administrateur</h3>
+      </div>
+      <div class="card-body">
+        <form action="{% url 'home' %}" method="POST">
+          {% csrf_token %} {% if admin_values %}
+          <div
+            class="alert alert-danger alert-dismissible fade show"
+            role="alert"
+          >
+            {{ admin_values.error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          {% endif %}
 
-       </form>
+          <div class="mb-3">
+            <label for="inputPseudo" class="form-label">Votre pseudo</label>
+            <input type="text" name="adminpseudo" class="form-control" id="inputPseudo" required />
+          </div>
+          <div class="mb-3">
+            <label for="inputCode" class="form-label">Votre code</label>
+            <input class="form-control" id="inputCode" type="password" name="code" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary">Connectez vous !</button>
+          <button type="reset" class="btn btn-primary">Reinitialiser</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 {% endblock %}
-

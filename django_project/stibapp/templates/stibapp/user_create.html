@@ -1,6 +1,7 @@
 {% extends 'stibapp/base.html' %} {% block content %}
+{% load static %}
 
-<h1>Enregistrer votre pour acceder a l'application</h1>
+<!--<h1>Enregistrer votre pour acceder a l'application</h1>
 <a href="{% url 'home' %}">Retour a la page de connexion</a>
 
 {% if user_values %}
@@ -10,6 +11,42 @@
   {% csrf_token %} {{ form.as_p }}
   <input type="submit" value="Envoyer" />
   <input type="reset" value="Reinitialiser" />
-</form>
+</form>-->
+
+<h3>Enregistrer votre pour acceder a l'application</h3>
+<a href="{% url 'home' %}">Retour a la page de connexion</a>
+
+<main class="form-signin">
+  <form action="" method="post">
+    {% csrf_token %}
+    {% if user_values %}
+    <div class="alert alert-danger alert-dismissible fade show"role="alert" >
+      {{ user_values.error }}
+      <button type="button"  class="btn-close" data-bs-dismiss="alert"  aria-label="Close" ></button>
+    </div>
+    {% endif %}
+    <img class="mb-4" src="{% static 'stibapp/assets/brand/stib-logo.png' %}" alt="" width="152" height="57">
+    <h1 class="h3 mb-3 fw-normal">Connectez vous</h1>
+
+    <div class="form-floating mb-3">
+      <input type="text" class="form-control" name="pseudo" id="pseudoInput" placeholder="name@example.com" required >
+      <label for="pseudoInput">Entrer votre pseudo</label>
+    </div>
+    <div class="form-floating">
+      <input type="password" class="form-control" name="userpassword" id="passwordInput" placeholder="Password" required>
+      <label for="passwordInput">Entrer votre mot de passe </label>
+    </div>
+    <div class="checkbox mb-3">
+      <label>
+        <input type="checkbox" name="isadmin" value="True"> Voulez vous etre un administrateur ?
+      </label>
+    </div>
+    <div class="form-floating">
+      <input type="password" class="form-control" name="code" id="codeInput" placeholder="Password" >
+      <label for="codeInput">Ajouter un passcode administrateur </label>
+    </div>
+    <button class="w-100 btn btn-lg btn-primary" type="submit">Créer un Compte</button>
+  </form>
+</main>
 
 {% endblock %}
